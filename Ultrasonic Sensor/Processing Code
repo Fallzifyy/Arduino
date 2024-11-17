@@ -1,0 +1,50 @@
+
+import processing.serial.*;
+
+Serial myPort;  // Create object from Serial class
+int angle = 0;  // The angle of the servo
+int distance = 0; // The distance measured by the ultrasonic sensor
+
+void setup() {
+  // Initialize the serial communication
+  String portName = Serial.list()[0]; // Choose the first available port
+  myPort = new Serial(this, portName, 9600);
+  size(400, 400);  // Set the window size
+}
+
+void draw() {
+  background(255);  // Set background to white
+  
+  // Read the incoming data from Arduino
+  while (myPort.available() > 0) {
+    String inData = myPort.readStringUntil('\n');
+    if (inData != null) {
+      inData = trim(inData);  // Remove whitespace
+      String[] data = split(inData, ' ');  // Split the incoming data into angle and distance
+      if (data.length == 4) {
+        angle = int(data[1]);
+        distance = int(data[3]);
+      }
+    }
+  }
+  
+  // Draw radar circle
+  stroke(0);
+  noFill();
+  ellipse(width / 2, height / 2, 300, 300);
+  
+  // Draw the radar lines
+  float radarAngle = radians(angle);
+  float radarX = cos(radarAngle) * distance;
+  float radarY = sin(radarAngle) * distance;
+  
+  // If distance is less than 40cm, draw red line; otherwise, draw green line
+  if (distance < 40) {
+    stroke(255, 0, 0);  // Red
+  } else {
+    stroke(0, 255, 0);  // Green
+  }
+  
+  line(width / 2, height / 2, width / 2 + radarX, height / 2 + radarY);
+}
+
